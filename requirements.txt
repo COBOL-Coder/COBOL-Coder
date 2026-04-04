@@ -1,0 +1,65 @@
+# Core Training Framework
+torch>=2.7.0
+torchvision>=0.23.0
+transformers>=4.41.2,<=4.49.0,!=4.46.*,!=4.47.*,!=4.48.*
+datasets>=2.16.0,<=3.2.0
+accelerate>=0.34.0,<=1.2.1
+peft>=0.11.1,<=0.12.0
+trl>=0.8.6,<=0.9.6
+tokenizers>=0.19.0,<=0.21.0
+safetensors>=0.6.0
+huggingface-hub>=0.25.0
+
+# Distributed Training & Optimization
+deepspeed>=0.18.0
+flash-attn>=2.7.0
+ring-flash-attn>=0.1.0
+liger-kernel>=0.2.0
+
+# Data Processing
+numpy<2.0.0
+pandas>=2.0.0
+scipy
+scikit-learn>=1.7.0
+pyarrow>=21.0.0
+
+# Tokenization
+sentencepiece
+tiktoken
+protobuf
+
+# API & Serving
+openai>=1.0.0
+uvicorn
+pydantic
+fastapi
+sse-starlette
+
+# Inference (optional, for evaluation)
+# vllm
+
+# UI & Visualization
+gradio>=4.38.0,<=5.18.0
+matplotlib>=3.7.0
+
+# Utilities
+fire
+packaging
+pyyaml
+tqdm
+psutil
+einops
+tyro<0.9.0
+typing_extensions
+marko
+
+# Experiment Tracking
+wandb
+
+# Media Processing (for multimodal support)
+av
+librosa
+pillow
+
+# Code Quality
+ruff
