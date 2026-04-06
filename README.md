@@ -1,6 +1,6 @@
 <div align="center">
 
-# COBOL-Coder: A COBOL-Specialized LLM for Code Generation and Translation
+# COBOL-Coder: Domain-Adapted Large Language Models for COBOL Code Generation and Translation
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![arXiv](https://img.shields.io/badge/arXiv-2408.04660-red?style=flat&label=arXiv)](https://arxiv.org/abs/2408.04660)
@@ -30,28 +30,41 @@
 
 **COBOL-Coder** is a family of domain-adapted LLMs specialized for COBOL code generation and bidirectional COBOL-Java code translation. Built on top of [Qwen2.5-Coder](https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct), COBOL-Coder addresses the critical gap in LLM capabilities for legacy programming languages.
 
+COBOL remains a critical language for mainframe systems in banking, insurance, and government, yet existing LLMs struggle to generate and translate COBOL code correctly. COBOL-Coder bridges this gap through domain-specific data curation and fine-tuning.
+
 Key highlights:
 
-- **79.29% compilation success rate** and **47.50% Pass@1** on COBOLEval, compared to 41.8% and 16.4% for GPT-4o
-- **34.93% Pass@1** on Java-to-COBOL translation, where general-purpose models achieve near-zero scores
-- An **automated data augmentation pipeline** leveraging compiler feedback and LLM-based refinement
+- **73.95% compilation success rate** and **49.33 Pass@1** on COBOLEval, compared to 41.8% and 16.4 for GPT-4o
+- **34.93 Pass@1** on Java-to-COBOL translation, where all other LLMs (including GPT-4o) achieve near-zero scores
+- The **only model** with non-trivial performance on COBOLCodeBench (26.09% CSR, 4.35 Pass@1)
+- An **automated data augmentation pipeline** combining compiler-guided validation with multi-stage similarity-based filtering
 - **COBOL-JavaTrans**, the first benchmark for bidirectional COBOL-Java translation
 
 ## Data Augmentation Pipeline
 
-We construct a COBOL-specific training corpus through three data sources:
+<div align="center">
+<img src="assets/pipeline.png" alt="Data Augmentation Pipeline" width="90%">
+</div>
 
-| Data Source | Instruction Format | Token Count | Instances |
+We construct COBOL-specific training data through three complementary sources and a multi-stage validation pipeline:
+
+**Source 1: Public COBOL Code from GitHub** - 40,829 unique COBOL files mined from public repositories, cleaned via MinHash deduplication, then validated through a compiler-based self-debugging loop (GnuCOBOL + LLM repair, K=3 iterations), yielding 31,492 compilable programs.
+
+**Source 2: Synthetic COBOL via Code Translation** - Java programs from The Stack v2-dedup are translated to COBOL using GPT-4o, then validated through:
+- *Stage 1: Compiler-based Validation* - Iterative compilation and LLM-guided repair
+- *Stage 2: Similarity-based Validation* - LLM-based pair scoring and AST-based back-translation scoring with CodeBERTScore 
+
+**Source 3: COBOL and Mainframe Knowledge Sources** - Licensed textbooks and technical websites, segmented and transformed into instruction-style QA pairs.
+
+**Stage 3: Instruction Generation** - For both Source 1 and Source 2, multiple LLMs (GPT-4, GPT-4o-mini, GPT-oss-120B, CodeLlama-70B) generate candidate problem descriptions, with GPT-4o selecting the best via LLM-as-a-judge.
+
+| Data Source | Instruction Format | Token Count | # Instances |
 |---|---|---|---|
-| GitHub Repositories | Description - COBOL Code | 38.4M | 31,492 |
-| Synthetic COBOL Code | COBOL-Java pairs | 92M | 101,735 |
-| Synthetic COBOL Code | Description - COBOL Code | 81M | 101,735 |
-| Technical References | Question-Answer | 241M | 153,415 |
-
-The pipeline includes:
-1. **COBOL code from GitHub** - Cleaned, deduplicated, and self-debugged with compiler feedback (GnuCOBOL) over K=3 iterations
-2. **Synthetic COBOL via code translation** - 300K Java programs from The Stack v2 translated to COBOL using GPT-4o, then validated through compilation
-3. **COBOL and mainframe knowledge** - Licensed textbooks and documentation converted into 153K instruction-style QA pairs
+| GitHub Repositories | Description-Code | 38.4M | 31,492 |
+| Synthetic COBOL | COBOL-Java | 206M | 173,042 |
+| Synthetic COBOL | Java-COBOL | 170M | 173,042 |
+| Synthetic COBOL | Description-Code | 230M | 172,759 |
+| COBOL Knowledge Sources | Question-Answer | 241M | 153,415 |
 
 ## Model Download
 
@@ -62,44 +75,58 @@ The pipeline includes:
 
 ## Evaluation Results
 
+All evaluations are performed in a **zero-shot** setting with temperature=0.0. Results are averaged over three runs.
+
 ### COBOL Code Generation
 
-Performance on COBOLEval and COBOLCodeBench benchmarks. **Bold** = best in block; **Bold + Underline** = overall best.
+Performance on COBOLEval (146 tasks) and COBOLCodeBench (46 tasks). **Bold** = best in block; **Bold + Underline** = overall best.
 
 | Model | COBOLEval CSR | COBOLEval Pass@1 | COBOLCodeBench CSR | COBOLCodeBench Pass@1 |
 |---|---|---|---|---|
 | DeepSeek-Coder 6.7B | 14.98 | 1.37 | 0 | 0 |
 | CodeGemma 7B | 0 | 0 | 0 | 0 |
 | CodeLlama 7B | 0 | 0 | 0 | 0 |
-| Mainframer 7B | **69.17** | 6.16 | 0 | 0 |
+| Mainframer 7B | 69.17 | 6.16 | 0 | 0 |
 | Qwen2.5-Coder 7B | 10.27 | 0.68 | 0 | 0 |
-| **COBOL-Coder-7B (Ours)** | 65.53 | **31.42** | **13.04** | 0 |
+| DeepSeek-R1-Distill-Qwen-7B | 0 | 0 | 0 | 0 |
+| StarCoder2 7B | 0 | 0 | 0 | 0 |
+| **COBOL-Coder-7B (Ours)** | **73.80** | **44.70** | **13.04** | 0 |
 | CodeLlama 13B | 3.40 | 0.68 | 0 | 0 |
 | Mainframer 13B | 62.24 | 11.64 | 0 | 0 |
 | Qwen2.5-Coder 14B | 12.32 | 2.74 | 0 | 0 |
-| **COBOL-Coder-14B (Ours)** | **_79.29_** | **_47.50_** | **_26.09_** | **_4.35_** |
+| DeepSeek-R1-Distill-Qwen-14B | 0 | 0 | 0 | 0 |
+| StarCoder2 15B | 0 | 0 | 0 | 0 |
+| DeepSeekCoder-V2 16B | 10.27 | 1.37 | 0 | 0 |
+| **COBOL-Coder-14B (Ours)** | **_73.95_** | **_49.33_** | **_26.09_** | **_4.35_** |
 | GPT-oss-120B | 19.17 | 4.11 | 17.39 | 2.17 |
 | GPT-4 | 24.12 | 15.75 | 13.04 | 0 |
 | GPT-4o | 41.80 | 16.40 | 13.04 | 0 |
 
 ### COBOL-Java Translation
 
-Performance on the COBOL-JavaTrans benchmark. C2J = COBOL-to-Java, J2C = Java-to-COBOL.
+Performance on the COBOL-JavaTrans benchmark (143 pairs). C2J = COBOL-to-Java, J2C = Java-to-COBOL.
 
 | Model | C2J CSR | C2J Pass@1 | J2C CSR | J2C Pass@1 |
 |---|---|---|---|---|
 | DeepSeek-Coder 6.7B | 88.11 | 63.64 | 0 | 0 |
 | CodeGemma 7B | 76.22 | 48.25 | 0 | 0 |
+| CodeLlama 7B | 76.92 | 29.37 | 0 | 0 |
+| Mainframer 7B | 5.59 | 1.39 | 0 | 0 |
 | Qwen2.5-Coder 7B | 14.68 | 10.47 | 0 | 0 |
-| **COBOL-Coder-7B (Ours)** | **95.80** | **81.11** | **36.18** | **24.72** |
+| DeepSeek-R1-Distill-Qwen-7B | 83.21 | 55.94 | 0 | 0 |
+| StarCoder2 7B | 0 | 0 | 0 | 0 |
+| **COBOL-Coder-7B (Ours)** | **97.90** | **81.81** | **63.64** | **27.27** |
+| CodeLlama 13B | 83.21 | 48.95 | 0 | 0 |
+| Mainframer 13B | 62.23 | 37.06 | 0 | 0 |
 | Qwen2.5-Coder 14B | 8.39 | 3.50 | 0 | 0 |
+| DeepSeek-R1-Distill-Qwen-14B | 70.63 | 60.13 | 0 | 0 |
+| StarCoder2 15B | 39.36 | 18.88 | 0 | 0 |
 | DeepSeekCoder-V2 16B | 95.10 | 75.52 | 0 | 0 |
-| **COBOL-Coder-14B (Ours)** | **95.80** | **83.22** | **_45.97_** | **_34.93_** |
+| **COBOL-Coder-14B (Ours)** | **97.90** | **83.91** | **_72.03_** | **_34.93_** |
 | GPT-oss-120B | **_98.60_** | **_89.51_** | 5.38 | 3.93 |
 | GPT-4 | 94.40 | 72.73 | 5.45 | 1.73 |
 | GPT-4o | 97.20 | 85.31 | 4.36 | 2.18 |
 
-For full results including developer survey findings, please refer to our paper.
 
 ## Getting Started
 
@@ -108,14 +135,14 @@ For full results including developer survey findings, please refer to our paper.
 ```bash
 conda create -n cobol-coder python=3.10 && conda activate cobol-coder
 
-git clone https://github.com/FSoft-AI4Code/COBOL-Coder.git
+git clone https://github.com/COBOL-Coder/COBOL-Coder.git
 cd COBOL-Coder
 pip install -r requirements.txt
 ```
 
 For evaluation, you also need:
-- [GnuCOBOL](https://gnucobol.sourceforge.io/) compiler (`cobc`) for COBOL compilation
-- Java JDK (`javac`, `java`) for Java compilation (C2J evaluation)
+- [GnuCOBOL](https://gnucobol.sourceforge.io/) compiler (`cobc`, version 2.0.0) for COBOL compilation
+- Java JDK (`javac`, version 17.0.18) for Java compilation (C2J evaluation)
 
 ### Training
 
@@ -125,12 +152,6 @@ Fine-tune Qwen2.5-Coder on COBOL-specific data using DeepSpeed ZeRO-3:
 bash sft.sh
 ```
 
-The training script uses [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) as the fine-tuning framework. Key hyperparameters:
-- **Learning rate**: 5e-6 (7B) / 1e-5 (14B)
-- **Batch size**: 2,048 (global)
-- **Max sequence length**: 4,096
-- **Optimizer**: AdamW with cosine schedule
-- **Precision**: BF16 with Flash Attention 2
 
 ### Inference
 
@@ -181,9 +202,9 @@ Example output files from COBOL-Coder are provided in `evaluation/output/`.
 
 ## COBOL-JavaTrans Benchmark
 
-COBOL-JavaTrans is the first benchmark for bidirectional COBOL-Java code translation, derived from HumanEval. It contains 143 task pairs with both COBOL and Java implementations, along with test cases for both languages.
+**COBOL-JavaTrans** is the first benchmark specifically designed for bidirectional COBOL-Java code translation, derived from HumanEval. It contains 143 task pairs (out of 164 HumanEval tasks) with both COBOL and Java implementations, along with test cases for both languages. Tasks were constructed using a vibe-coding-inspired workflow, with all programs manually reviewed and validated for compilability and functional correctness.
 
-| Benchmark | Source Language | Task | Size |
+| Benchmark | Source Language | Task Category | Size |
 |---|---|---|---|
 | COBOLEval | Python | Code Generation | 146 problems |
 | COBOLCodeBench | Python | Code Generation | 46 problems |
@@ -208,6 +229,7 @@ COBOL-Coder/
 │   └── utils.py                  # Shared utilities
 ├── examples/                     # DeepSpeed configs and training examples
 ├── scripts/                      # Utility scripts
+├── docker/                       # Docker configurations (CUDA, NPU, ROCm)
 ├── sft.sh                        # Training launch script
 ├── requirements.txt              # Python dependencies
 └── cobol_reserved_words.txt      # COBOL vocabulary for tokenizer
@@ -215,8 +237,10 @@ COBOL-Coder/
 
 ## Acknowledgements
 
+- The authors gratefully acknowledge the support and resources provided by Dr. Phong Xuan Nguyen of the FPT Software AI Center, Vietnam
 - This codebase is built on [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) for efficient fine-tuning
 - COBOLEval benchmark by [BloopAI](https://bloop.ai/blog/evaluating-llms-on-cobol)
+- COBOLCodeBench by [Kumar (2025)](https://huggingface.co/datasets/harshini-kumar/CobolCodeBench)
 - Base model: [Qwen2.5-Coder](https://github.com/QwenLM/Qwen2.5-Coder) by the Qwen team
 
 ## Citation
@@ -225,7 +249,7 @@ If you find this work useful, please cite our paper:
 
 ```bibtex
 @article{dau2025cobolcoder,
-  title={Does Domain Specialization Matter? A Study on LLMs for COBOL Code Generation and Translation},
+  title={COBOL-Coder: Domain-Adapted Large Language Models for COBOL Code Generation and Translation},
   author={Dau, Anh T. V. and Tan, Shin Hwei and Yang, Jinqiu and Bui, Nghi D. Q. and Nguyen, Anh Tuan},
   year={2025}
 }
