@@ -3,7 +3,7 @@
 # COBOL-Coder: Domain-Adapted Large Language Models for COBOL Code Generation and Translation
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![arXiv](https://img.shields.io/badge/arXiv-2408.04660-red?style=flat&label=arXiv)](https://arxiv.org/abs/2408.04660)
+[![arXiv](https://img.shields.io/badge/arXiv-2408.04660-red?style=flat&label=arXiv)](https://arxiv.org/abs/2604.03986)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 
 </div>
@@ -248,10 +248,12 @@ COBOL-Coder/
 If you find this work useful, please cite our paper:
 
 ```bibtex
-@article{dau2025cobolcoder,
+@article{dau2026cobol,
   title={COBOL-Coder: Domain-Adapted Large Language Models for COBOL Code Generation and Translation},
-  author={Dau, Anh T. V. and Tan, Shin Hwei and Yang, Jinqiu and Bui, Nghi D. Q. and Nguyen, Anh Tuan},
-  year={2025}
+  author={Dau, Anh TV and Tan, Shin Hwei and Yang, Jinqiu and Bui, Nghi DQ and Nguyen, Anh Tuan},
+  journal={arXiv preprint arXiv:2604.03986},
+  year={2026}
+}
 }
 ```
 
