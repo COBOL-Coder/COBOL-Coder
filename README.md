@@ -56,7 +56,7 @@ We construct COBOL-specific training data through three complementary sources an
 
 **Source 3: COBOL and Mainframe Knowledge Sources** - Licensed textbooks and technical websites, segmented and transformed into instruction-style QA pairs.
 
-**Stage 3: Instruction Generation** - For both Source 1 and Source 2, multiple LLMs (GPT-4, GPT-4o-mini, GPT-oss-120B, CodeLlama-70B) generate candidate problem descriptions, with GPT-4o selecting the best via LLM-as-a-judge.
+- *Stage 3: Instruction Generation** - For both Source 1 and Source 2, multiple LLMs (GPT-4, GPT-4o-mini, GPT-oss-120B, CodeLlama-70B) generate candidate problem descriptions, with GPT-4o selecting the best via LLM-as-a-judge.
 
 | Data Source | Instruction Format | Token Count | # Instances |
 |---|---|---|---|
